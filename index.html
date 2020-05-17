@@ -1,0 +1,19 @@
+<html>
+
+    <input id="input" type="file"/>
+    <video id="video" controls>
+
+    </video>
+    <script>
+
+
+        const input = document.getElementById("input")
+        const video = document.getElementById("video")
+        input.addEventListener("change", function(event){
+            file = event.target.files[0]
+            console.log(URL.createObjectURL(file))
+            video.src=URL.createObjectURL(file)
+        })
+
+    </script>
+</html>
