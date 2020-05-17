@@ -91,11 +91,11 @@ const App = () =>{
       }, 5000)
     }
     else{
-      const fileBuffer = await writeFileToBuffer(file)
-      const fileString = Buffer.from(fileBuffer).toString('ascii')
+      const formData = new FormData()
+      formData.append('new file', file)
       const submission = {
         title: title,
-        file: fileString
+        file: formData
       }
       try{
         await videoService.uploadVideo(submission)
