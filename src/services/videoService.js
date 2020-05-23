@@ -7,8 +7,14 @@ const getVideos = async () => {
     return response.data
 }
 
-const uploadVideo = async (video) =>{
-    await axios.post(`${baseUrl}/videos`, video)
+const getVideo = async (filename) =>{
+    const response = await axios.get(`${baseUrl}/videos/${filename}`)
+    return response.data
 }
 
-export default {getVideos, uploadVideo}
+const uploadVideo = async (video) =>{
+    const result = await axios.post(`${baseUrl}/videos`, video)
+    return result.data
+}
+
+export default {getVideos, uploadVideo, getVideo}

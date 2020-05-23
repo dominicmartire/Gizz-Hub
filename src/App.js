@@ -6,8 +6,7 @@ const Video = ({title, file}) => {
   console.log(file)
   return(
     <div>
-      <div>{title}</div>
-      <video id="video" src={file} controls>
+      <video id="video" width="320" height="240" src={file} controls>
       </video>
     </div>
   )
@@ -17,15 +16,27 @@ const UploadFile = ({handleSubmit, fileChange, changeTitle}) =>{
   return(
     <div>
       <div>Upload new video</div>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} encType="multipart/form-data">
         <div>
           <input type="text" onChange={changeTitle}/>
         </div>
         <div>
-          <input type="file" accept=".mp4, .wav, .ogg, .ogv" onChange={fileChange}/>
+          <input type="file" name="file" accept=".mp4, .wav, .ogg, .ogv" onChange={fileChange}/>
         </div>
         <button type="submit">Submit</button>
       </form>
+    </div>
+  )
+}
+
+const VideoContainer = ({title, getVideo}) => {
+  const [show, setShow] = useState(false)
+  const [source, setSource] = useState('')
+  getVideo(title).then(r=>setSource(r.source))
+  return(
+    <div>
+      <div onClick={()=>setShow(!show)}>{title}</div>
+      {show ? <Video title={title} file={source}/> : null}
     </div>
   )
 }
@@ -44,33 +55,49 @@ const App = () =>{
   const [errorState, setErrorState] = useState(false)
   const [errorMessage, setErrorMessage] = useState('');
   const [title, setTitle] = useState('')
-
+  const [videoComponents, setVideoComponents] = useState([])
 
   useEffect(()=>{
     const retrieve = async () =>{
-      const data = await videoService.getVideos()
-      const videoBlobs = data.map(v =>{
-        const fileString = v.file
-        const blob = stringToBlob(fileString)
-        return {
-          title: v.title,
-          file: blob,
-          id: v.id
-        }
-      })
-      setVideos(videoBlobs)
+      const files = await videoService.getVideos()
+      setVideos(files)
     }
-    document.title = "Gizz Hub"
     retrieve()
+    document.title = "Gizz Hub"
   },[])
 
+/*
   const renderVideos = () =>{
-    console.log("videos")
-    const videoComponents = videos.map(v=>{
-      return <Video title={v.title} file={v.file} key={v.id}/>
-    })
-    return videoComponents
+    const loadFiles = () =>{
+      const loadedVideos = videos.map(async video => {
+        const loadedFile = await videoService.getVideo(video.filename)
+        return {
+          filename: video.filename,
+          source: loadedFile,
+          id: video._id
+        }
+      })
+      return new Promise((resolve, reject)=>{
+        resolve(loadedVideos)
+      })
+    }
+    const updateVideos = async () =>{
+      const loadedVideos = await loadFiles()
+      setVideoComponents(loadedVideos.map(v=>{
+        return <Video title={v.filename} file={v.source} id={v.id}/>
+      }))
+      console.log(videoComponents)
+    }
+    updateVideos()
   }
+*/
+
+  const renderContainers = () =>{
+    return videos.map(v => {
+      return <VideoContainer title={v.filename} getVideo={videoService.getVideo} key={v._id}/>
+    })
+  }
+
 
   const submitFile = async (e) =>{
     e.preventDefault()
@@ -91,43 +118,16 @@ const App = () =>{
       }, 5000)
     }
     else{
-      const formData = new FormData()
-      formData.append('new file', file)
-      const submission = {
-        title: title,
-        file: formData
-      }
       try{
-        await videoService.uploadVideo(submission)
+        const formData = new FormData()
+        formData.append("file", file, file.name)
+        const result = await videoService.uploadVideo(formData)
+        console.log(result)
       }
       catch(e){
         console.log(e)
       }
     }
-  }
-
-  const writeFileToBuffer = (file) => {
-    console.log("Uploaded file")
-    console.log(file)
-    return new Promise((resolve, reject)=>{
-      const reader = new FileReader()
-      reader.onload = (event) => {
-        resolve(event.target.result)
-      }
-      reader.abort = reject
-      reader.readAsArrayBuffer(file)
-    })
-  }
-
-  const stringToBlob = (string) =>{
-    //const buffer = Buffer.from(string, 'ascii')
-    const buffer = new ArrayBuffer(string.length)
-    const charBuffer = new Uint8Array(buffer)
-    for(let i = 0; i < string.length; i++){
-      charBuffer[i] = string.charCodeAt(i)
-    }
-    const file = new Blob(charBuffer)
-    return URL.createObjectURL(file)
   }
 
   const fileChange= (e) =>{
@@ -145,7 +145,7 @@ const App = () =>{
   return(
   <div>
     {errorState === true ? <Error errorMessage={errorMessage}/> : <div></div>}
-    {renderVideos()}
+    {renderContainers()}
     <UploadFile handleSubmit={submitFile} fileChange={fileChange} changeTitle={changeTitle}/>
   </div>)
 }
