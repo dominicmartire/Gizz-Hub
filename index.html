@@ -1,19 +1,18 @@
 <html>
-
     <input id="input" type="file"/>
     <video id="video" controls>
 
     </video>
     <script>
-
-
-        const input = document.getElementById("input")
         const video = document.getElementById("video")
-        input.addEventListener("change", function(event){
-            file = event.target.files[0]
-            console.log(URL.createObjectURL(file))
-            video.src=URL.createObjectURL(file)
-        })
+        const getResponse = async () =>{
+            let response = await fetch("http://localhost:3001/videos/5ecc4eed4ceba1d14403c25a")
+            if(response.ok){
+                const stream = response.body.getReader()
+                console.log(stream.read())
 
+            }
+        }
+        getResponse()
     </script>
 </html>

@@ -2,12 +2,14 @@ import React, {useState, useEffect} from 'react';
 import './App.css';
 import videoService from './services/videoService';
 
+
 const Video = ({title, file}) => {
-  console.log(file)
+  const [show, setShow] = useState(false)
   return(
     <div>
-      <video id="video" width="320" height="240" src={file} controls>
-      </video>
+      <h2  onClick={()=>setShow(!show)}>{title}</h2>
+      {show ? <video id="video" width="320" height="240" src={file} controls>
+      </video> : null}
     </div>
   )
 }
@@ -29,18 +31,6 @@ const UploadFile = ({handleSubmit, fileChange, changeTitle}) =>{
   )
 }
 
-const VideoContainer = ({title, getVideo}) => {
-  const [show, setShow] = useState(false)
-  const [source, setSource] = useState('')
-  getVideo(title).then(r=>setSource(r.source))
-  return(
-    <div>
-      <div onClick={()=>setShow(!show)}>{title}</div>
-      {show ? <Video title={title} file={source}/> : null}
-    </div>
-  )
-}
-
 const Error = ({errorMessage}) =>{
   return(
     <div>
@@ -55,48 +45,26 @@ const App = () =>{
   const [errorState, setErrorState] = useState(false)
   const [errorMessage, setErrorMessage] = useState('');
   const [title, setTitle] = useState('')
-  const [videoComponents, setVideoComponents] = useState([])
+  const [videoContainers, setVideoContainers] = useState([])
 
   useEffect(()=>{
-    const retrieve = async () =>{
-      const files = await videoService.getVideos()
-      setVideos(files)
-    }
-    retrieve()
+    videoService.getVideos().then(response=>setVideos(response))
     document.title = "Gizz Hub"
+    //videoService.getVideo("5ecc4eb9d3dc008b28f881a8")
+    //setVideoContainers([<Video title={"a"} file={"http://localhost:3001/videos/5ecc4eb9d3dc008b28f881a8"} key = "5ecc4eb9d3dc008b28f881a8"/>])
   },[])
 
-/*
-  const renderVideos = () =>{
-    const loadFiles = () =>{
-      const loadedVideos = videos.map(async video => {
-        const loadedFile = await videoService.getVideo(video.filename)
-        return {
-          filename: video.filename,
-          source: loadedFile,
-          id: video._id
-        }
-      })
-      return new Promise((resolve, reject)=>{
-        resolve(loadedVideos)
-      })
-    }
-    const updateVideos = async () =>{
-      const loadedVideos = await loadFiles()
-      setVideoComponents(loadedVideos.map(v=>{
-        return <Video title={v.filename} file={v.source} id={v.id}/>
-      }))
-      console.log(videoComponents)
-    }
-    updateVideos()
-  }
-*/
+  useEffect(()=>{
+    const components = videos.map(v=>{
 
-  const renderContainers = () =>{
-    return videos.map(v => {
-      return <VideoContainer title={v.filename} getVideo={videoService.getVideo} key={v._id}/>
+      return <Video title={v.title} file={`http://localhost:3001/videos/${v.id}`} key={v.id}/>
+
     })
-  }
+    setVideoContainers(components)
+  },[videos])
+
+
+
 
 
   const submitFile = async (e) =>{
@@ -120,7 +88,8 @@ const App = () =>{
     else{
       try{
         const formData = new FormData()
-        formData.append("file", file, file.name)
+        formData.append("title", title)
+        formData.append("file", file)
         const result = await videoService.uploadVideo(formData)
         console.log(result)
       }
@@ -145,7 +114,7 @@ const App = () =>{
   return(
   <div>
     {errorState === true ? <Error errorMessage={errorMessage}/> : <div></div>}
-    {renderContainers()}
+    {videoContainers}
     <UploadFile handleSubmit={submitFile} fileChange={fileChange} changeTitle={changeTitle}/>
   </div>)
 }

@@ -5,8 +5,11 @@ const videoSchema = mongoose.Schema({
     title:{
         type: String,
     },
-    file:{
-        type: mongoose.Schema.Types.Buffer
+    path:{
+        type: String
+    },
+    fileType:{
+        type:String
     }
 })
 

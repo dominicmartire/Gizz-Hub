@@ -7,8 +7,8 @@ const getVideos = async () => {
     return response.data
 }
 
-const getVideo = async (filename) =>{
-    const response = await axios.get(`${baseUrl}/videos/${filename}`)
+const getVideo = async (id) =>{
+    const response = await axios.get(`${baseUrl}/videos/${id}`)
     return response.data
 }
 
