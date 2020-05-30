@@ -10,6 +10,10 @@ const videoSchema = mongoose.Schema({
     },
     fileType:{
         type:String
+    },
+    concert:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref:'Concert'
     }
 })
 

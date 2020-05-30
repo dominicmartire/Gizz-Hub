@@ -21,12 +21,12 @@ mongoose.connect(mongo_uri, { useNewUrlParser: true })
 
 
 
-app.get('/videos', async(request, response)=>{
+app.get('/api/videos', async(request, response)=>{
     const videos = await Video.find({})
     response.json(videos)
 })
 
-app.get('/videos/:id', async (request, response)=>{
+app.get('/api/videos/:id', async (request, response)=>{
     try {
         const video = await Video.findById(request.params.id)
         if(video){
@@ -65,7 +65,7 @@ app.get('/videos/:id', async (request, response)=>{
     }
 })
 
-app.post('/videos', async(request, response)=>{
+app.post('/api/videos', async(request, response)=>{
     let form = new formidable.IncomingForm()
     form.parse(request, async (err, fields, file)=>{
         if(err){

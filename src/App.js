@@ -1,13 +1,17 @@
 import React, {useState, useEffect} from 'react';
 import './App.css';
 import videoService from './services/videoService';
+import {
+  BrowserRouter as Router,
+  Switch, Route, Link
+} from "react-router-dom"
 
 
 const Video = ({title, file}) => {
   const [show, setShow] = useState(false)
   return(
-    <div>
-      <h2  onClick={()=>setShow(!show)}>{title}</h2>
+    <div className="videoComponent">
+      <h2 onClick={()=>setShow(!show)}>{title}</h2>
       {show ? <video id="video" width="320" height="240" src={file} controls>
       </video> : null}
     </div>
@@ -33,7 +37,7 @@ const UploadFile = ({handleSubmit, fileChange, changeTitle}) =>{
 
 const Error = ({errorMessage}) =>{
   return(
-    <div>
+    <div className="errorMessage">
       {errorMessage}
     </div>
   )
@@ -57,7 +61,7 @@ const App = () =>{
   useEffect(()=>{
     const components = videos.map(v=>{
 
-      return <Video title={v.title} file={`http://localhost:3001/videos/${v.id}`} key={v.id}/>
+      return <Video title={v.title} file={`http://localhost:3001/api/videos/${v.id}`} key={v.id}/>
 
     })
     setVideoContainers(components)
@@ -95,6 +99,12 @@ const App = () =>{
       }
       catch(e){
         console.log(e)
+        setErrorState(true)
+        setErrorMessage("Error uploading file")
+        setTimeout(()=>{
+          setErrorState(false)
+          setErrorMessage('')
+        }, 5000)
       }
     }
   }
@@ -111,11 +121,31 @@ const App = () =>{
     console.log(title)
   }
 
+  const padding = {
+    padding: 5
+  }
   return(
   <div>
+    <h1 className="header">Gizz Hub: Bootlegs of your favorite band</h1>
     {errorState === true ? <Error errorMessage={errorMessage}/> : <div></div>}
+    <Router>
+      <div>
+        <Link style={padding} to="/">Home</Link>
+        <Link style={padding} to="/concerts">Concerts</Link>
+
+        <Switch>
+          <Route path="/concerts">
+            <Error errorMessage="hi"/>
+          </Route>
+
+          <Route path="/">
+            <Error errorMessage="hello"/>
+          </Route>
+        </Switch>
+      </div>
     {videoContainers}
     <UploadFile handleSubmit={submitFile} fileChange={fileChange} changeTitle={changeTitle}/>
+    </Router>
   </div>)
 }
 
