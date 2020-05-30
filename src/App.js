@@ -1,10 +1,12 @@
 import React, {useState, useEffect} from 'react';
 import './App.css';
 import videoService from './services/videoService';
+import concertService from './services/concertService'
 import {
   BrowserRouter as Router,
-  Switch, Route, Link
+  Switch, Route, Link, useParams
 } from "react-router-dom"
+import { PromiseProvider } from 'mongoose';
 
 
 const Video = ({title, file}) => {
@@ -43,6 +45,49 @@ const Error = ({errorMessage}) =>{
   )
 }
 
+const Concerts = ({concerts}) =>{
+  return(
+  <div>
+    <h2>Concerts</h2>
+    <ul>
+      {concerts.map(c=>{
+        return(
+        <li key={c.id}>
+          <Link to={`/concerts/${c.id}`}>{c.location}</Link>
+        </li>)
+      })}
+    </ul>
+  </div>)
+}
+
+const Concert = ({concerts, videos, changeConcertId, children})=>{
+
+  const id = useParams().id
+  const concert = concerts.find(c=>c.id === id)
+
+  if(typeof concert === 'undefined'){
+    return(
+      <div>
+        {children}
+      </div>
+    )
+  }
+  const videoComponents = concert.videos.map(videoId=>{
+    const videoObject = videos.find(v=>v.id === videoId)
+    const title = videoObject.title
+    return <Video title={title} file={`http://localhost:3001/api/videos/${videoId}`}/>
+  })
+  changeConcertId(id)
+  return(
+    <div>
+      <div>
+        {videoComponents}
+      </div>
+      {children}
+    </div>
+  )
+}
+
 const App = () =>{
   const [videos, setVideos] = useState([])
   const [file, setFile] = useState(new Blob())
@@ -50,25 +95,27 @@ const App = () =>{
   const [errorMessage, setErrorMessage] = useState('');
   const [title, setTitle] = useState('')
   const [videoContainers, setVideoContainers] = useState([])
+  const [concerts, setConcerts] = useState([])
+  const [concertId, setConcertId] = useState('')
 
   useEffect(()=>{
     videoService.getVideos().then(response=>setVideos(response))
+    concertService.getConcerts().then(response=>setConcerts(response))
     document.title = "Gizz Hub"
     //videoService.getVideo("5ecc4eb9d3dc008b28f881a8")
     //setVideoContainers([<Video title={"a"} file={"http://localhost:3001/videos/5ecc4eb9d3dc008b28f881a8"} key = "5ecc4eb9d3dc008b28f881a8"/>])
   },[])
 
-  useEffect(()=>{
-    const components = videos.map(v=>{
 
-      return <Video title={v.title} file={`http://localhost:3001/api/videos/${v.id}`} key={v.id}/>
-
+  const showConcerts = ()=>{
+    const concertComponents =  concerts.map(c=>{
+      return (
+      <div key={c.id}>
+        {c.location}
+      </div>)
     })
-    setVideoContainers(components)
-  },[videos])
-
-
-
+    return concertComponents
+  }
 
 
   const submitFile = async (e) =>{
@@ -93,6 +140,7 @@ const App = () =>{
       try{
         const formData = new FormData()
         formData.append("title", title)
+        formData.append("concertId", concertId)
         formData.append("file", file)
         const result = await videoService.uploadVideo(formData)
         console.log(result)
@@ -124,6 +172,8 @@ const App = () =>{
   const padding = {
     padding: 5
   }
+
+
   return(
   <div>
     <h1 className="header">Gizz Hub: Bootlegs of your favorite band</h1>
@@ -134,18 +184,22 @@ const App = () =>{
         <Link style={padding} to="/concerts">Concerts</Link>
 
         <Switch>
+          <Route path="/concerts/:id">
+            <Concert concerts={concerts} videos={videos} changeConcertId={setConcertId}>
+              <UploadFile handleSubmit={submitFile} fileChange={fileChange} changeTitle={changeTitle}/>
+            </Concert>
+          </Route>
+
           <Route path="/concerts">
-            <Error errorMessage="hi"/>
+            <Concerts concerts={concerts}/>
           </Route>
 
           <Route path="/">
-            <Error errorMessage="hello"/>
+            <div></div>
           </Route>
         </Switch>
       </div>
-    {videoContainers}
-    <UploadFile handleSubmit={submitFile} fileChange={fileChange} changeTitle={changeTitle}/>
-    </Router>
+  </Router>
   </div>)
 }
 
