@@ -19,6 +19,7 @@ q
 .env.production.local
 /backend/node_modules
 /backend/.env
+/backend/videos
 
 npm-debug.log*
 yarn-debug.log*
