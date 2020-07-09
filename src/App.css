@@ -1,16 +1,60 @@
 body{
   background-color:#f0c29c;
+  margin:0;
+  padding:0;
 }
 
 .header{
-  text-align:center;
+  background-image: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.3)), url("./assets/header-image.jpg");
+  height: 300px;
+  background-size: cover;
+}
+
+.header h1{
+  text-align: center;
+  text-shadow: 1px 1px black;
+  position: relative;
+  top:75%;
+  color: white;
 }
 
 .videoComponent{
   font-size: 1em;
+  position: relative;
+  margin-bottom: 0;
+}
+
+.videoComponent > video{
+  background-color: black;
+}
+
+.hoverTitle{
+  width:50px;
+}
+
+.hoverTitle .hoverText{
+  visibility: hidden;
+  width: 120px;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  padding: 5px 0;
+  border-radius: 6px;
+  position: absolute;
+  z-index: 1;
+}
+
+.hoverTitle:hover .hoverText{
+  visibility: visible;
 }
 
 .errorMessage{
   color:red;
   font-size: 24pt;
+}
+
+.formFields{
+  display: flex;
+  flex-direction: column;
+  flex:0 0 10%;
 }

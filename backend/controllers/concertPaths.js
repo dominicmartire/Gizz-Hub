@@ -1,3 +1,4 @@
+let formidable = require('formidable')
 const concertRouter = require('express').Router()
 const Concert = require('../models/concert')
 
@@ -24,18 +25,29 @@ concertRouter.get('/:id', async(request, response) => {
 })
 
 concertRouter.post("/", async(request, response)=>{
-    try{
-        const body = request.body
-
+    
+    let form = new formidable.IncomingForm()
+    form.parse(request, async(err, fields)=>{
+        if(err){
+            return response.json(400).status({"error": err})
+        }
+        console.log(fields)
         const concert = new Concert({
-            location: body.location
+            location:fields.location,
+            videos:[],
+            date: new Date(fields.date)
         })
-        await concert.save()
-        response.json(concert.toJSON())
-    }
-    catch(e){
-        response.json(400).json({error:"error adding concert"})
-    }
+        try{
+            const savedConcert = await concert.save()
+            return response.status(201).json(savedConcert.toJSON())
+        }
+        catch(err){
+            return response.status(400).json({error:"error adding concert"})
+        }
+    })
+
+    
+
 })
 
 module.exports = concertRouter

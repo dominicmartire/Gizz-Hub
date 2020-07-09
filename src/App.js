@@ -6,15 +6,18 @@ import {
   BrowserRouter as Router,
   Switch, Route, Link, useParams
 } from "react-router-dom"
-import { PromiseProvider } from 'mongoose';
 
 
-const Video = ({title, file}) => {
+const Video = ({title, url}) => {
   const [show, setShow] = useState(false)
+
   return(
     <div className="videoComponent">
-      <h2 onClick={()=>setShow(!show)}>{title}</h2>
-      {show ? <video id="video" width="320" height="240" src={file} controls>
+      <div className="hoverTitle">
+        <h3 onClick={()=>setShow(!show)}>{title}</h3>
+        <div className="hoverText">{show ? "click to hide video" : "click to show video"}</div>
+      </div>
+      {show ? <video id="video" width="640" height="480" src={url} controls>
       </video> : null}
     </div>
   )
@@ -25,13 +28,19 @@ const UploadFile = ({handleSubmit, fileChange, changeTitle}) =>{
     <div>
       <div>Upload new video</div>
       <form onSubmit={handleSubmit} encType="multipart/form-data">
-        <div>
-          <input type="text" onChange={changeTitle}/>
-        </div>
-        <div>
+        <div className="formFields">
+          <div>
+          <input type="text" onChange={e=>changeTitle(e.target.value)}/>
+          </div>
+
+          <div>
           <input type="file" name="file" accept=".mp4, .wav, .ogg, .ogv" onChange={fileChange}/>
+          </div>
+
+          <div>
+          <button type="submit">Submit</button>
+          </div>
         </div>
-        <button type="submit">Submit</button>
       </form>
     </div>
   )
@@ -45,7 +54,7 @@ const Error = ({errorMessage}) =>{
   )
 }
 
-const Concerts = ({concerts}) =>{
+const Concerts = ({concerts, setDate, setLocation, handleSubmit}) =>{
   return(
   <div>
     <h2>Concerts</h2>
@@ -57,6 +66,22 @@ const Concerts = ({concerts}) =>{
         </li>)
       })}
     </ul>
+    <div>
+      <form onSubmit={handleSubmit}>
+        <div className="formFields">
+          <div>
+            <input type="text" onChange={e=>setLocation(e.target.value)}/>
+          </div>
+          <div>
+            <input type="date" onChange={e=>setDate(e.target.value)}/>
+          </div>
+          
+          <div>
+          <button type="submit">Submit</button>
+          </div>
+        </div>
+      </form>
+    </div>
   </div>)
 }
 
@@ -74,12 +99,18 @@ const Concert = ({concerts, videos, changeConcertId, children})=>{
   }
   const videoComponents = concert.videos.map(videoId=>{
     const videoObject = videos.find(v=>v.id === videoId)
-    const title = videoObject.title
-    return <Video title={title} file={`http://localhost:3001/api/videos/${videoId}`}/>
+    if(typeof videoObject !== 'undefined'){
+      const title = videoObject.title
+      return <Video key={videoId} title={title} url={videoService.videoUrl(videoId)}/>
+      //return <Video key={videoId} title={title} file={`http://localhost:3001/api/videos/${videoId}`}/>
+    }
   })
   changeConcertId(id)
   return(
     <div>
+      <h2>
+        {concert.location}
+      </h2>
       <div>
         {videoComponents}
       </div>
@@ -97,6 +128,8 @@ const App = () =>{
   const [videoContainers, setVideoContainers] = useState([])
   const [concerts, setConcerts] = useState([])
   const [concertId, setConcertId] = useState('')
+  const [location, setLocation] = useState('')
+  const [concertDate, setConcertDate] = useState('')
 
   useEffect(()=>{
     videoService.getVideos().then(response=>setVideos(response))
@@ -117,6 +150,36 @@ const App = () =>{
     return concertComponents
   }
 
+  const submitConcert = async(e)=>{
+    e.preventDefault()
+    if(location.length === 0){
+      setErrorState(true)
+      setErrorMessage("Please say the location of the concert")
+      setTimeout(()=>{
+        setErrorState(false)
+        setErrorMessage('')
+      }, 5000)
+    }
+    else if(concertDate.length === 0){
+      setErrorState(true)
+      setErrorMessage("Please say the date of the concert")
+      setTimeout(()=>{
+        setErrorState(false)
+        setErrorMessage('')
+      }, 5000)
+    }
+    else{
+      try{
+        const formData = new FormData()
+        formData.append("location", location)
+        formData.append("date", concertDate)
+        console.log(location, concertDate)
+        const result = await concertService.uploadConcert(formData)
+        setConcerts(concerts.concat(result))
+      }
+      catch(e){}
+    }
+  }
 
   const submitFile = async (e) =>{
     e.preventDefault()
@@ -143,7 +206,7 @@ const App = () =>{
         formData.append("concertId", concertId)
         formData.append("file", file)
         const result = await videoService.uploadVideo(formData)
-        console.log(result)
+        setVideos(videos.concat(result))
       }
       catch(e){
         console.log(e)
@@ -163,11 +226,8 @@ const App = () =>{
     setFile(f)
   }
 
-  const changeTitle = (e) => {
-    e.preventDefault()
-    setTitle(e.target.value)
-    console.log(title)
-  }
+
+
 
   const padding = {
     padding: 5
@@ -176,7 +236,11 @@ const App = () =>{
 
   return(
   <div>
-    <h1 className="header">Gizz Hub: Bootlegs of your favorite band</h1>
+    <div className="header">
+      <h1>
+      Gizz Hub: Bootlegs of your favorite band
+      </h1>
+    </div>
     {errorState === true ? <Error errorMessage={errorMessage}/> : <div></div>}
     <Router>
       <div>
@@ -186,12 +250,12 @@ const App = () =>{
         <Switch>
           <Route path="/concerts/:id">
             <Concert concerts={concerts} videos={videos} changeConcertId={setConcertId}>
-              <UploadFile handleSubmit={submitFile} fileChange={fileChange} changeTitle={changeTitle}/>
+              <UploadFile handleSubmit={submitFile} fileChange={fileChange} changeTitle={setTitle}/>
             </Concert>
           </Route>
 
           <Route path="/concerts">
-            <Concerts concerts={concerts}/>
+            <Concerts concerts={concerts} setDate={setConcertDate} setLocation={setLocation} handleSubmit={submitConcert}/>
           </Route>
 
           <Route path="/">

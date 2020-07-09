@@ -11,7 +11,11 @@ const concertSchema = mongoose.Schema({
             type:mongoose.Schema.Types.ObjectId,
             ref:'Video'
         }
-    ]
+    ],
+    date:{
+        type: Date,
+        required: true
+    }
 })
 
 concertSchema.set('toJSON',{
