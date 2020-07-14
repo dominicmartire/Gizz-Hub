@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 
-const baseUrl = "http://localhost:3001/api/concerts"
+const baseUrl = "/api/concerts"
 
 const getConcerts = async () =>{
     const response = await axios.get(baseUrl)

@@ -3,7 +3,7 @@ import './App.css';
 import videoService from './services/videoService';
 import concertService from './services/concertService'
 import {
-  BrowserRouter as Router,
+  HashRouter as Router,
   Switch, Route, Link, useParams
 } from "react-router-dom"
 
@@ -134,9 +134,7 @@ const App = () =>{
   useEffect(()=>{
     videoService.getVideos().then(response=>setVideos(response))
     concertService.getConcerts().then(response=>setConcerts(response))
-    document.title = "Gizz Hub"
-    //videoService.getVideo("5ecc4eb9d3dc008b28f881a8")
-    //setVideoContainers([<Video title={"a"} file={"http://localhost:3001/videos/5ecc4eb9d3dc008b28f881a8"} key = "5ecc4eb9d3dc008b28f881a8"/>])
+    document.title="Gizz Hub"
   },[])
 
 
