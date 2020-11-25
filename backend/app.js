@@ -17,7 +17,7 @@ app.use(logger.requestLogger)
 
 
 
-const mongo_uri ="mongodb+srv://dmartire99:Briarwood1!@cluster0-sc6g0.mongodb.net/gizz-hub?retryWrites=true&w=majority"
+const mongo_uri = process.env.MONGO_URI
 mongoose.connect(mongo_uri, { useNewUrlParser: true })
     .then(()=>console.log("connected to mongodb"))
     .catch(error=>"error"+error.message)
