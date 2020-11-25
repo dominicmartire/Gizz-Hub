@@ -92,22 +92,33 @@ videoRouter.delete('/:id', async(request, response)=>{
     try{
         const video = await Video.findById(request.params.id)
         const concert = await Concert.findById(video.concert)
-        concert.videos = concert.videos.filter(v=>v!== video.id)
+
+        console.log("concert ", concert)
+        if(concert){
+            console.log(video.id)
+            const newVideos = concert.videos.filter(v=> v !== video.id)
+            console.log(newVideos)
+            concert.videos = newVideos
+            console.log(concert)
+            await concert.save()
+        }
 
         const path = video.path
         await Video.findByIdAndDelete(request.params.id)
+
+        fs.unlink(path, (err)=>{
+            if(err){
+                console.log(error)
+                return response.status(400).json({error:"error deleting file"})
+            }
+            return response.status(204).end()
+        })
     }
     catch(e){
         console.log(e)
         return response.status(400).end()
     }
-    fs.unlink(path, (err)=>{
-        if(err){
-            console.log(error)
-            return response.status(400).json({error:"error deleting file"})
-        }
-        return response.status(204).end()
-    })
+    
 
 })
 

@@ -1,6 +1,8 @@
-let formidable = require('formidable')
+const formidable = require('formidable')
 const concertRouter = require('express').Router()
 const Concert = require('../models/concert')
+const Video = require("../models/video")
+const fs = require('fs')
 
 concertRouter.get("/", async(request, response)=>{
     try{
@@ -49,5 +51,38 @@ concertRouter.post("/", async(request, response)=>{
     
 
 })
+
+concertRouter.delete("/:id", async(request,response)=>{
+    try{
+        const concert = await Concert.findById(request.params.id)
+        concert.videos.forEach(async v=>{
+            const video = await Video.findById(v)
+            console.log(video)
+
+
+            if(video){
+                const path = video.path
+            
+            
+                await Video.findByIdAndDelete(v)
+
+                fs.unlink(path, (err)=>{
+                    if(err){
+                        console.log(error)
+                        return response.status(400).json({error:"error deleting file"})
+                    }
+                    return response.status(204).end()
+                })
+            }
+        })
+
+        await Concert.findByIdAndDelete(request.params.id)
+        return response.status(200)
+    }
+    catch(err){
+        return response.status(400).json({error:"error deleting concert"})
+    }
+})
+
 
 module.exports = concertRouter

@@ -21,7 +21,8 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "server": "json-server --watch db.json --middlewares ./middleware.js --port 3001",
-    "webpack": "webpack --mode=development"
+    "webpack-dev": "webpack --mode=development",
+    "webpack": "webpack --mode=production"
   },
   "eslintConfig": {
     "extends": "react-app"
